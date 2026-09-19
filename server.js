@@ -7,7 +7,6 @@ const { ANIMASU_BASE_URL, PORT, REQUEST_TIMEOUT_MS, SEARCH_BUDGET_MS, DAILY_CACH
 
 process.env.ANIMASU_BASE_URL = ANIMASU_BASE_URL;
 const { animasu } = require("yaoi");
-let runtimeAnimasuUrl = ANIMASU_BASE_URL;
 axios.defaults.timeout = REQUEST_TIMEOUT_MS;
 
 const app = express();
@@ -236,7 +235,7 @@ function absoluteUrl(value, baseUrl = ANIMASU_BASE_URL) {
 }
 
 const SOURCE_HEADERS = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36", Accept: "text/html,application/xhtml+xml" };
-const SOURCE_CONFIGS = [{ id: "animasu", get baseUrl() { return runtimeAnimasuUrl; }, kind: "animasu" }];
+const SOURCE_CONFIGS = [{ id: "animasu", baseUrl: ANIMASU_BASE_URL, kind: "animasu" }];
 const SOURCE_BASE_URLS = SOURCE_CONFIGS.map((source) => source.baseUrl);
 function isBlockedSourceHtml(html) {
   const text = String(html || "").toLowerCase();
@@ -523,14 +522,7 @@ app.use(express.json());
 app.use("/vendor/animejs", express.static(path.join(__dirname, "node_modules", "animejs", "dist", "bundles")));
 app.use("/vendor/three", express.static(path.join(__dirname, "node_modules", "three", "build")));
 app.use(express.static(path.join(__dirname, "public")));
-
-app.get("/api/health", (_, response) => response.json({ ok: true, provider: "animasu + yaoi", source: runtimeAnimasuUrl, sources: [{ id: "animasu", baseUrl: runtimeAnimasuUrl }, { id: "yaoi", baseUrl: "npm:yaoi" }], sourceStatus: sourceState.status, sourceId: sourceState.sourceId, sourceBaseUrl: sourceState.baseUrl, sourceLastSuccessAt: sourceState.lastSuccessAt, sourceLastError: sourceState.lastError, ...runtimeStats() }));
-app.get("/api/env", (_, response) => response.json({ ANIMASU_BASE_URL: runtimeAnimasuUrl, PORT }));
-app.post("/api/env", (request, response) => {
-  const value = String(request.body?.ANIMASU_BASE_URL || "").trim();
-  try { const url = new URL(value); if (!/^https?:$/.test(url.protocol)) throw new Error("URL harus memakai http atau https."); runtimeAnimasuUrl = url.origin; memory.clear(); staleKeys.clear(); sourceState.status = "unknown"; response.json({ ok: true, ANIMASU_BASE_URL: runtimeAnimasuUrl }); }
-  catch (error) { response.status(400).json({ ok: false, error: error.message || "URL tidak valid." }); }
-});
+app.get("/api/health", (_, response) => response.json({ ok: true, source: ANIMASU_BASE_URL, sources: [{ id: "animasu", baseUrl: ANIMASU_BASE_URL }, { id: "yaoi", baseUrl: "npm:yaoi" }], sourceStatus: sourceState.status, sourceId: sourceState.sourceId, sourceBaseUrl: sourceState.baseUrl, sourceLastSuccessAt: sourceState.lastSuccessAt, sourceLastError: sourceState.lastError, ...runtimeStats() }));
 
 async function collectCatalog(search, genre, signal) {
   const found = [];

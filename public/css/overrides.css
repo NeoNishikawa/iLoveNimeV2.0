@@ -17,6 +17,8 @@
 #motionField{z-index:0!important;opacity:.86!important}.topbar,#app,.ambient{position:relative;z-index:1}.collection-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.collection-actions .nav-action,.collection-actions .clear-button{min-height:36px;padding:9px 12px;border:1px solid var(--line);border-radius:10px}.collection-actions .nav-action:hover{border-color:var(--aqua);color:var(--aqua)}
 
 /* The app starts at the top edge; the navigation never participates in a hidden scroll offset. */
-html,body{margin:0!important;padding:0!important;scroll-padding-top:0}.topbar{position:fixed!important;top:0!important;left:50%!important;transform:translateX(-50%)!important;margin:0 auto!important}.topbar + #app{padding-top:76px}@media(max-width:720px){.topbar + #app{padding-top:67px}}
+html,body{margin:0!important;padding:0!important;scroll-padding-top:92px}.topbar{position:sticky!important;top:0!important;left:auto!important;transform:none!important;margin:0 auto!important}.topbar + #app{padding-top:0!important}.hero__copy{visibility:visible!important;opacity:1!important}.hero.scroll-fade{opacity:1;transform:none}
 
 .scroll-fade{opacity:.32;transform:translateY(24px);transition:opacity 420ms cubic-bezier(.23,1,.32,1),transform 520ms cubic-bezier(.23,1,.32,1)}.scroll-fade--visible{opacity:1;transform:translateY(0)}[data-scroll-direction="up"] .scroll-fade{transition-duration:460ms}.scroll-fade--visible .anime-card{animation:scroll-card-in 480ms cubic-bezier(.23,1,.32,1) both}@keyframes scroll-card-in{from{opacity:.25;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+.catalog-state:empty{display:none}.catalog-state{min-height:1.35rem}.hero{min-height:560px;padding-top:62px;padding-bottom:76px}.hero__scene{min-height:380px}

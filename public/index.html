@@ -22,7 +22,7 @@
 
   <header class="topbar" id="top">
     <a class="brand" href="#top" data-scroll aria-label="ILoveNime home"><b>ILN</b><span>ILoveNime<small>Hyouta's anime shelf</small></span></a>
-    <nav class="main-nav" aria-label="Main navigation"><a href="#discover" data-scroll>Discover</a><a href="#collection" data-scroll>My list</a><button class="nav-action" id="toggleAppFullscreen" type="button">Fullscreen</button><button class="nav-action" id="openEnv" type="button">Env Controller</button><a href="https://sociabuzz.com/neonishikawa/tribe" target="_blank" rel="noopener noreferrer">Donate</a><a href="https://tally.so/r/7RAZd2" target="_blank" rel="noopener noreferrer">Feedback</a><span class="source-pill" id="sourceStatus">System checking</span></nav>
+    <nav class="main-nav" aria-label="Main navigation"><a href="#discover" data-scroll>Discover</a><a href="#collection" data-scroll>My list</a><button class="nav-action" id="toggleAppFullscreen" type="button">Fullscreen</button><a href="https://sociabuzz.com/neonishikawa/tribe" target="_blank" rel="noopener noreferrer">Donate</a><a href="https://tally.so/r/7RAZd2" target="_blank" rel="noopener noreferrer">Feedback</a></nav>
     <div class="nav-search" id="navSearch"></div>
     <button class="local-badge" title="Tracking tersimpan hanya pada browser ini"><img src="/icons/user.svg" alt="" />Local</button>
   </header>
@@ -33,7 +33,7 @@
         <div class="hero__eyebrow"><span class="eyebrow-dot"></span><p class="kicker">iLoveNime:</p><span class="hero__season">v2</span></div>
         <h1>Find your<br /><span>next anime.</span></h1>
         <p class="lede">Ruang personal untuk menemukan serial baru, menyusun progres, dan menonton episode favoritmu dengan nyaman.</p>
-        <div id="searchDock" class="search-dock"><form class="search-form" id="searchForm"><label for="searchInput">Search anime</label><input id="searchInput" autocomplete="off" placeholder="Ketik judul anime…" /><button type="submit">Search</button></form><p class="search-help">Ketik untuk mencari langsung — tidak perlu menekan Enter.</p></div>
+        <div id="searchDock" class="search-dock"><form class="search-form" id="searchForm"><label for="searchInput">Search anime</label><input id="searchInput" autocomplete="off" placeholder="Ketik judul anime…" /><button type="submit">Search</button></form><p class="search-help">Tekan Enter untuk mencari.</p></div>
       </div>
       <div class="hero__scene" id="heroScene">
         <div class="hero__profile">
@@ -69,7 +69,6 @@
   <dialog class="confirm-dialog" id="clearDialog" aria-labelledby="clearDialogTitle"><div class="confirm-dialog__content"><p class="kicker">LOCAL STORAGE / CONFIRMATION</p><h2 id="clearDialogTitle">Clear local data?</h2><p>Semua status, progres, dan episode yang sudah ditonton akan dihapus dari browser ini.</p><div class="confirm-dialog__actions"><button id="cancelClear" class="dialog-secondary">Cancel</button><button id="confirmClear" class="dialog-danger">Clear data</button></div></div></dialog>
   <input id="importDataInput" type="file" accept=".json,application/json" hidden />
   <div class="data-loader hidden" id="dataLoader" role="status" aria-live="polite"><div class="data-loader__orbit" aria-hidden="true"></div><strong>Mengimpor data</strong><span id="dataLoaderText">Membaca file Local Storage…</span></div>
-  <dialog class="confirm-dialog env-dialog" id="envDialog"><div class="confirm-dialog__content"><p class="kicker">RUNTIME CONFIGURATION</p><h2>Env Controller</h2><p>Ganti domain source tanpa install ulang aplikasi. Nilai ini berlaku untuk sesi aplikasi ini.</p><label for="envUrl">ANIMASU_BASE_URL</label><input id="envUrl" type="url" placeholder="https://domain-baru.com" spellcheck="false" /><input id="envFile" type="file" accept=".env,text/plain" hidden /><button class="nav-action" id="importEnvFile" type="button">Import .env</button><p class="env-status" id="envStatus" role="status"></p><div class="confirm-dialog__actions"><button id="cancelEnv" class="dialog-secondary" type="button">Cancel</button><button id="applyEnv" class="dialog-danger" type="button">Apply URL</button></div></div></dialog>
   <script type="module" src="/js/app.js"></script>
 </body>
 </html>
