@@ -148,12 +148,12 @@ async function init() {
   $("#searchForm").onsubmit = (event) => { event.preventDefault(); state.query = $("#searchInput").value.trim(); activateSearch(); search(); };
   $("#searchInput").oninput = (event) => { state.query = event.target.value.trim(); };
   document.querySelectorAll("[data-scroll]").forEach((link) => link.onclick = (event) => { event.preventDefault(); const target = document.querySelector(link.getAttribute("href")); if (target) smoothScroll(target); });
-  try {
-    const genres = await api.genres();
+  const genresRequest = api.genres().then((genres) => {
     $("#genreStrip").insertAdjacentHTML("beforeend", renderGenres(genres.data));
     document.querySelectorAll("[data-genre]").forEach((button) => button.onclick = () => { document.querySelector(".genre-chip.is-active")?.classList.remove("is-active"); button.classList.add("is-active"); state.genre = button.dataset.genre; if (state.query || state.genre) { activateSearch(); search(); } else loadDaily(); });
-  } catch (_) { /* Catalog state displays source errors when daily/search is loaded. */ }
+  }).catch(() => { /* Catalog state displays source errors when daily/search is loaded. */ });
   loadDaily();
+  await genresRequest;
 }
 
 init();

@@ -4,7 +4,8 @@ module.exports = {
   // Gunakan PORT=3100 npm start bila port default sedang dipakai proses lain.
   PORT: Number.isInteger(Number(process.env.PORT)) && Number(process.env.PORT) > 0 ? Number(process.env.PORT) : 3099,
   REQUEST_TIMEOUT_MS: Number(process.env.REQUEST_TIMEOUT_MS) > 0 ? Number(process.env.REQUEST_TIMEOUT_MS) : 8000,
-  SEARCH_BUDGET_MS: Number(process.env.SEARCH_BUDGET_MS) > 0 ? Number(process.env.SEARCH_BUDGET_MS) : 15000,
+  // Batasi pencarian agar UI tidak menunggu pagination source terlalu lama.
+  SEARCH_BUDGET_MS: Number(process.env.SEARCH_BUDGET_MS) > 0 ? Number(process.env.SEARCH_BUDGET_MS) : 7000,
   DAILY_CACHE_MS: Number(process.env.DAILY_CACHE_MS) > 0 ? Number(process.env.DAILY_CACHE_MS) : 300000,
   DETAIL_CACHE_MS: Number(process.env.DETAIL_CACHE_MS) > 0 ? Number(process.env.DETAIL_CACHE_MS) : 1800000,
   STREAM_CACHE_MS: Number(process.env.STREAM_CACHE_MS) > 0 ? Number(process.env.STREAM_CACHE_MS) : 600000,

@@ -14,7 +14,7 @@
 /* Desktop uses the system pointer; the decorative cursor is disabled. */
 .fire-cursor{display:none!important}.desktop-shell,.desktop-shell *,.desktop-shell iframe{cursor:auto!important}.desktop-shell input,.desktop-shell textarea{cursor:text!important}
 /* Keep the Three.js canvas visible above the page background while content remains clickable. */
-#motionField{z-index:0!important;opacity:.86!important}.topbar,#app,.ambient{position:relative;z-index:1}.collection-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.collection-actions .nav-action,.collection-actions .clear-button{min-height:36px;padding:9px 12px;border:1px solid var(--line);border-radius:10px}.collection-actions .nav-action:hover{border-color:var(--aqua);color:var(--aqua)}
+#motionField{z-index:0!important;opacity:.86!important}.topbar,#app,.ambient{position:relative;z-index:1}#app{isolation:isolate}.hero__copy,.hero__scene{position:relative;z-index:2}.collection-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.collection-actions .nav-action,.collection-actions .clear-button{min-height:36px;padding:9px 12px;border:1px solid var(--line);border-radius:10px}.collection-actions .nav-action:hover{border-color:var(--aqua);color:var(--aqua)}
 
 /* The app starts at the top edge; the navigation never participates in a hidden scroll offset. */
 html,body{margin:0!important;padding:0!important;scroll-padding-top:92px}.topbar{position:sticky!important;top:0!important;left:auto!important;transform:none!important;margin:0 auto!important}.topbar + #app{padding-top:0!important}.hero__copy{visibility:visible!important;opacity:1!important}.hero.scroll-fade{opacity:1;transform:none}
