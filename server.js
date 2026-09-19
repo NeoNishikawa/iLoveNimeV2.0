@@ -21,8 +21,7 @@ const upstreamCooldownUntil = new Map();
 let upstreamDrainTimer = null;
 const MAX_CACHE_ENTRIES = Number(process.env.MAX_CACHE_ENTRIES) > 0 ? Number(process.env.MAX_CACHE_ENTRIES) : 64;
 const SLIDE_SIZE = 20;
-// Search tidak perlu menyapu terlalu banyak halaman sebelum memberi hasil awal.
-const MAX_SEARCH_PAGES = Number(process.env.MAX_SEARCH_PAGES) > 0 ? Number(process.env.MAX_SEARCH_PAGES) : 4;
+const MAX_SEARCH_PAGES = Number(process.env.MAX_SEARCH_PAGES) > 0 ? Number(process.env.MAX_SEARCH_PAGES) : 20;
 const MIN_SEARCH_LENGTH = 2;
 const USER_TIME_ZONE = "Asia/Bangkok";
 const DAY_KEYS = ["minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"];
@@ -453,7 +452,7 @@ async function fetchAnimeDetail(slug) {
 }
 
 async function fetchCatalogPage({ search = "", genre = "", page = 1, signal }) {
-  const paths = search ? (page === 1 ? ["/pencarian/"] : [`/page/${page}/`]) : ["/pencarian/"];
+  const paths = search ? [`/page/${page}/`, "/pencarian/"] : ["/pencarian/"];
   let lastError;
   let reachable = false;
   for (const pathname of paths) {

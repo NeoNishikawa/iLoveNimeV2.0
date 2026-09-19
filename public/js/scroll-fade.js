@@ -1,5 +1,5 @@
 export function initScrollFade() {
-  const targets = [...document.querySelectorAll("#hero, #discover, #detail, #collection")];
+  const targets = [...document.querySelectorAll("#discover, #detail, #collection")];
   if (!targets.length) return;
   targets.forEach((element, index) => { element.classList.add("scroll-fade"); if (index === 0) element.classList.add("scroll-fade--visible"); });
   let lastY = window.scrollY;
