@@ -1,159 +1,38 @@
 import { api } from "./api.js";
 import { loadTracking, saveTracking, upsertTracking, clearTracking, exportTracking, importTracking } from "./storage.js";
-import { renderGenres, renderCatalog, renderDetail, renderStats, renderCollectionFilters, filterCollection, renderCollection } from "./view.js";
-import { reveal, revealNewAnime, switchSearch, showDetail, menu, savedFlight, smoothScroll } from "./motion.js";
-import { initPlayer, openPlayer } from "./player.js";
-import { initScene } from "./scene.js";
-import { initScrollFade } from "./scroll-fade.js";
+import { openPlayer, initPlayer } from "./player.js";
 
-const PAGE_SIZE = 20;
-const $ = (value) => document.querySelector(value);
-const state = { query: "", genre: "", slides: [], slide: 0, detail: null, tracking: loadTracking(), collectionFilter: "all", status: "planned", progress: 0, moved: false, searchToken: 0 };
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => [...document.querySelectorAll(selector)];
+const PREFS_KEY = "iln_preferences_v1";
+const statusLabels = { planned: "Plan to watch", watching: "Watching", completed: "Completed", dropped: "Dropped" };
+const state = { daily: [], genres: [], tracking: loadTracking(), query: "", activeStatus: "all", localQuery: "", detail: null, editMode: false, selected: new Set(), searchToken: 0, prefs: loadPrefs() };
 
-function renderTracking() {
-  const visibleItems = filterCollection(state.tracking, state.collectionFilter);
-  $("#collectionStats").innerHTML = renderStats(state.tracking);
-  $("#collectionFilters").innerHTML = renderCollectionFilters(state.tracking, state.collectionFilter);
-  $("#collectionList").innerHTML = renderCollection(visibleItems);
-  document.querySelectorAll("[data-collection-filter]").forEach((button) => button.onclick = () => { state.collectionFilter = button.dataset.collectionFilter; renderTracking(); });
-  document.querySelectorAll("[data-open]").forEach((button) => button.onclick = () => selectAnime(button.dataset.open));
-}
+function loadPrefs() { try { return { theme: "dark", sidebarCollapsed: false, name: "Anime watcher", handle: "Local profile", ...JSON.parse(localStorage.getItem(PREFS_KEY) || "{}") }; } catch { return { theme: "dark", sidebarCollapsed: false, name: "Anime watcher", handle: "Local profile" }; } }
+function savePrefs() { localStorage.setItem(PREFS_KEY, JSON.stringify(state.prefs)); }
+function escape(value) { return String(value ?? "").replace(/[&<>\"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]); }
+function imageMarkup(url, title, className = "") { return url ? `<img class="${className}" src="${escape(url)}" alt="${escape(title)}" loading="lazy" />` : `<span class="placeholder-art ${className}">Artwork unavailable</span>`; }
+function statusLabel(status) { return statusLabels[status] || status || "Unknown"; }
+function showToast(title, message = "") { const stack = $("#toastStack"); const toast = document.createElement("div"); toast.className = "toast"; toast.innerHTML = `<strong>${escape(title)}</strong><span>${escape(message)}</span>`; stack.appendChild(toast); window.setTimeout(() => toast.remove(), 3800); }
+function normalizeSummary(anime) { return { ...anime, slug: anime.slug || anime.id, title: anime.title || "Untitled anime", image: anime.image || "", type: anime.type || "Series", status: anime.status || "Unknown", episode: anime.episode || anime.latestEpisode || "—", genres: anime.genres || [] }; }
+function cardMarkup(anime, index = 0, saved = false) { const item = normalizeSummary(anime); const progressItem = state.tracking.find((entry) => entry.slug === item.slug); const progress = Number(progressItem?.progress || 0); const total = Number(progressItem?.total || item.total || 0); const percent = total ? Math.min(100, Math.round(progress / total * 100)) : 0; return `<button class="${saved ? "saved-card" : "anime-card"} ${state.selected.has(item.slug) ? "selected" : ""}" data-slug="${escape(item.slug)}" type="button">${saved ? `<span class="saved-art">${imageMarkup(item.image, item.title)}<span class="saved-status">${escape(statusLabel(progressItem?.status))}</span></span><span class="saved-body"><strong class="saved-title">${escape(item.title)}</strong><span class="saved-progress"><span>Episode ${progress} / ${total || "?"}</span><b>${percent}%</b></span><span class="saved-track"><i style="width:${percent}%"></i></span></span>` : `<span class="anime-art">${imageMarkup(item.image, item.title)}<b class="anime-index">${String(index + 1).padStart(2, "0")}</b></span><span class="anime-copy"><small>${escape(item.status)}</small><strong class="anime-title">${escape(item.title)}</strong><em class="anime-meta">${escape(item.type)} · ${escape(item.episode)}</em></span>`}${saved ? `<span class="button saved-action">${state.editMode ? "Select" : "Open detail"}</span>` : ""}</button>`; }
+function bindCards(root = document) { root.querySelectorAll("[data-slug]").forEach((card) => { card.onclick = (event) => { event.preventDefault(); const slug = card.dataset.slug; if (state.editMode && card.classList.contains("saved-card")) { if (state.selected.has(slug)) state.selected.delete(slug); else state.selected.add(slug); renderStorage(); return; } openDetail(slug); }; }); }
+function renderDaily() { const items = state.daily.map(normalizeSummary); $("#trendingGrid").innerHTML = items.slice(0, 3).map((item, index) => cardMarkup(item, index)).join(""); $("#updateGrid").innerHTML = items.map((item, index) => cardMarkup(item, index)).join(""); $("#trendingState").textContent = items.length ? "Live catalog data from the configured source." : "No titles available today."; $("#updateSub").textContent = `${items.length} titles`; bindCards(); }
+function refreshProfile() { const episodes = state.tracking.reduce((sum, item) => sum + Number(item.progress || 0), 0); const completed = state.tracking.filter((item) => item.status === "completed").length; const level = Math.floor(episodes / 10) + 1; const xp = episodes % 10 * 10; $("#profileName").textContent = state.prefs.name; $("#profileHandle").textContent = state.prefs.handle; $("#sidebarName").textContent = state.prefs.name; $("#sidebarHandle").textContent = state.prefs.handle; $("#popoverName").textContent = state.prefs.name; $("#levelText").textContent = `Level ${level}`; $("#xpText").textContent = `${episodes} episodes watched`; $("#xpBar").style.width = `${xp}%`; $("#storageTotal").textContent = state.tracking.length; $("#episodeTotal").textContent = episodes; $("#completedTotal").textContent = completed; $("#navStorageCount").textContent = state.tracking.length; [$("#profileAvatar"), $("#sidebarAvatar"), $("#popoverAvatar")].forEach((element) => { if (element) element.textContent = state.prefs.name.slice(0, 2).toUpperCase(); }); }
+function updateTabCounts() { const counts = { all: state.tracking.length, completed: 0, watching: 0, planned: 0, dropped: 0 }; state.tracking.forEach((item) => { if (counts[item.status] !== undefined) counts[item.status] += 1; }); $$(".tab").forEach((tab) => { const value = tab.dataset.status; const count = tab.querySelector("b"); if (count) count.textContent = counts[value] || 0; tab.classList.toggle("active", value === state.activeStatus); }); }
+function renderStorage() { const query = state.localQuery.toLocaleLowerCase(); const items = state.tracking.filter((item) => (state.activeStatus === "all" || item.status === state.activeStatus) && (!query || item.title.toLocaleLowerCase().includes(query))); updateTabCounts(); $("#storageGrid").innerHTML = items.length ? items.map((item, index) => cardMarkup(item, index, true)).join("") : `<p class="empty-state">${state.tracking.length ? "No saved titles match this filter." : "Your local shelf is empty. Save an anime from its detail page."}</p>`; $("#editBar").hidden = !state.editMode; $("#editCount").textContent = `${state.selected.size} selected`; bindCards($("#storageGrid")); refreshProfile(); }
+function setSection(name) { const target = name === "storage" ? $("#storageSection") : name === "search" ? $("#searchSection") : $("#trendingSection"); target?.scrollIntoView({ behavior: "smooth", block: "start" }); $$(".nav-item[data-section]").forEach((button) => button.classList.toggle("active", button.dataset.section === name)); if (name === "search") $("#globalSearch").focus(); }
+function renderGenres() { $("#sidebarGenres").innerHTML = state.genres.slice(0, 8).map((genre) => `<button class="nav-item genre-nav" data-filter-genre="${escape(genre.slug)}" type="button"><span class="nav-icon">•</span><span class="nav-label">${escape(genre.name)}</span></button>`).join(""); $$("[data-filter-genre]").forEach((button) => button.onclick = () => { const genre = button.dataset.filterGenre; if (!genre) return setSection("home"); state.query = ""; runSearch("", genre); }); }
+async function runSearch(query = state.query, genre = "") { const token = ++state.searchToken; state.query = query.trim(); $("#searchSection").hidden = false; $("#searchLabel").textContent = state.query || "genre"; $("#searchState").textContent = "Searching live catalog…"; $("#searchGrid").innerHTML = ""; setSection("search"); try { const response = await api.catalog(state.query, genre); if (token !== state.searchToken) return; const items = (response.data || []).map(normalizeSummary); $("#searchState").textContent = items.length ? `${items.length} titles found${response.partial ? " · partial source response" : ""}` : "No titles found. Try another keyword."; $("#searchGrid").innerHTML = items.length ? items.map((item, index) => cardMarkup(item, index)).join("") : `<p class="empty-state">No results from the live API.</p>`; bindCards($("#searchGrid")); } catch (error) { if (token === state.searchToken) { $("#searchState").textContent = error.message; $("#searchGrid").innerHTML = `<p class="empty-state">The live catalog is temporarily unavailable.</p>`; } } }
+async function openDetail(slug) { const dialog = $("#detailDialog"); const content = $("#detailContent"); dialog.showModal(); content.innerHTML = `<p class="section-state">Loading live anime detail…</p>`; try { const response = await api.detail(slug); state.detail = response.data; renderDetail(); } catch (error) { content.innerHTML = `<p class="empty-state">${escape(error.message)}</p>`; } }
+function renderDetail() { const anime = state.detail; const tracked = state.tracking.find((item) => item.slug === anime.slug) || { status: "planned", progress: 0, watchedEpisodes: [] }; const episodes = anime.episodes || []; $("#detailContent").innerHTML = `<div class="detail-layout"><div class="detail-poster">${imageMarkup(anime.image, anime.title)}</div><div class="detail-copy"><p class="eyebrow">${escape(anime.type || "Series")} / ${escape(anime.status || "Unknown")}</p><h2>${escape(anime.title)}</h2><p>${escape(anime.synopsis || "Synopsis unavailable from the live source.")}</p><p class="detail-meta">${escape(anime.studio || "Studio unavailable")} · ${episodes.length} episodes · ${escape(anime.duration || "Duration unavailable")}</p><div class="detail-tags">${(anime.genres || []).map((genre) => `<span>${escape(genre.name || genre)}</span>`).join("")}</div><div class="detail-actions"><button class="button button-primary" data-save-detail type="button">Save / update tracking</button><button class="button button-ghost" data-status-detail="${escape(tracked.status)}" type="button">Status: ${escape(statusLabel(tracked.status))}</button></div></div><div class="episode-block"><p class="eyebrow">EPISODES / LIVE MIRRORS</p><div class="episode-grid">${episodes.length ? episodes.map((episode) => `<button class="episode-button ${tracked.watchedEpisodes?.includes(Number(episode.number)) ? "watched" : ""}" data-episode-slug="${escape(episode.slug)}" data-episode-number="${escape(episode.number)}" type="button"><small>EP ${String(episode.number).padStart(2, "0")}</small>${escape(episode.title || `Episode ${episode.number}`)}</button>`).join("") : `<p class="empty-state">No episodes available from the live API.</p>`}</div></div></div>`; $("[data-save-detail]").onclick = () => saveDetailTracking(); $("[data-status-detail]").onclick = () => cycleDetailStatus(); $$('[data-episode-slug]').forEach((button) => button.onclick = () => openPlayer(button.dataset.episodeSlug, button.textContent.trim(), Number(button.dataset.episodeNumber))); }
+function saveDetailTracking() { if (!state.detail) return; const current = state.tracking.find((item) => item.slug === state.detail.slug); state.tracking = upsertTracking(state.tracking, { slug: state.detail.slug, title: state.detail.title, image: state.detail.image, total: state.detail.episodes?.length || 0, status: current?.status || "planned", progress: current?.progress || 0, watchedEpisodes: current?.watchedEpisodes || [] }); saveTracking(state.tracking); renderStorage(); showToast("Saved locally", state.detail.title); renderDetail(); }
+function cycleDetailStatus() { if (!state.detail) return; const current = state.tracking.find((item) => item.slug === state.detail.slug) || { slug: state.detail.slug, title: state.detail.title, image: state.detail.image, total: state.detail.episodes?.length || 0, progress: 0, watchedEpisodes: [], status: "planned" }; const order = ["planned", "watching", "completed", "dropped"]; current.status = order[(order.indexOf(current.status) + 1) % order.length]; state.tracking = upsertTracking(state.tracking, current); saveTracking(state.tracking); renderStorage(); renderDetail(); }
+function markWatchedAndGetNext(episode) { if (!state.detail || !episode) return null; const current = state.tracking.find((item) => item.slug === state.detail.slug) || { slug: state.detail.slug, title: state.detail.title, image: state.detail.image, total: state.detail.episodes?.length || 0, status: "watching", progress: 0, watchedEpisodes: [] }; const watched = [...new Set([...(current.watchedEpisodes || []), Number(episode.number)])].sort((a, b) => a - b); state.tracking = upsertTracking(state.tracking, { ...current, progress: Math.max(current.progress || 0, Number(episode.number)), watchedEpisodes: watched }); saveTracking(state.tracking); renderStorage(); const index = state.detail.episodes.findIndex((item) => Number(item.number) === Number(episode.number)); return state.detail.episodes[index + 1] || null; }
+function applyTheme() { document.documentElement.dataset.theme = state.prefs.theme; $("#themeIcon").textContent = state.prefs.theme === "dark" ? "☾" : "☀"; }
+function applySidebar() { $("#appShell").classList.toggle("collapsed", state.prefs.sidebarCollapsed); $("#sidebarToggle").textContent = state.prefs.sidebarCollapsed ? "›" : "‹"; $("#sidebarToggle").setAttribute("aria-expanded", String(!state.prefs.sidebarCollapsed)); }
+function setupProfile() { const popover = $("#profilePopover"); const open = () => { $("#profileNameInput").value = state.prefs.name; popover.hidden = false; $("#profileTrigger").setAttribute("aria-expanded", "true"); }; const close = () => { popover.hidden = true; $("#profileTrigger").setAttribute("aria-expanded", "false"); }; $("#profileTrigger").onclick = open; $("#headerProfile").onclick = open; $("#closeProfile").onclick = close; $("#saveProfile").onclick = () => { state.prefs.name = $("#profileNameInput").value.trim() || "Anime watcher"; savePrefs(); refreshProfile(); close(); showToast("Profile updated"); }; }
+function setupEvents() { $("#sidebarToggle").onclick = () => { state.prefs.sidebarCollapsed = !state.prefs.sidebarCollapsed; savePrefs(); applySidebar(); }; $("#mobileMenu").onclick = () => $("#sidebar").classList.toggle("open"); $("#themeToggle").onclick = () => { state.prefs.theme = state.prefs.theme === "dark" ? "light" : "dark"; savePrefs(); applyTheme(); }; $("#globalSearch").onkeydown = (event) => { if (event.key === "Enter") { event.preventDefault(); runSearch(event.currentTarget.value); } }; $("#clearSearch,#clearSearchButton").forEach((button) => button.onclick = () => { state.query = ""; $("#globalSearch").value = ""; $("#searchSection").hidden = true; setSection("home"); }); $("#localSearch").oninput = (event) => { state.localQuery = event.target.value; renderStorage(); }; $("#localStatus").onchange = (event) => { state.activeStatus = event.target.value; renderStorage(); }; $$(".tab").forEach((tab) => tab.onclick = () => { state.activeStatus = tab.dataset.status; $("#localStatus").value = state.activeStatus; renderStorage(); }); $$("[data-section]").forEach((button) => button.onclick = () => setSection(button.dataset.section)); $("#editModeButton").onclick = () => { state.editMode = !state.editMode; state.selected.clear(); $("#editModeButton").textContent = state.editMode ? "Done editing" : "Edit mode"; renderStorage(); }; $("#cancelEdit").onclick = () => { state.editMode = false; state.selected.clear(); $("#editModeButton").textContent = "Edit mode"; renderStorage(); }; $("#deleteSelected").onclick = () => { state.tracking = state.tracking.filter((item) => !state.selected.has(item.slug)); saveTracking(state.tracking); state.selected.clear(); renderStorage(); showToast("Titles removed"); }; $("#closeDetail").onclick = () => $("#detailDialog").close(); $("#aboutButton").onclick = () => $("#aboutDialog").showModal(); $("#closeAbout,#aboutDone").forEach((button) => button.onclick = () => $("#aboutDialog").close()); $("#importData").onclick = () => $("#importFile").click(); $("#importFile").onchange = (event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { state.tracking = importTracking(reader.result); renderStorage(); showToast("Import complete", `${state.tracking.length} titles restored`); } catch (error) { showToast("Import failed", error.message); } }; reader.readAsText(file); event.target.value = ""; }; $("#exportData").onclick = () => { const blob = new Blob([exportTracking(state.tracking)], { type: "application/json" }); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `ilovenime-tracking-${new Date().toISOString().slice(0, 10)}.json`; link.click(); window.setTimeout(() => URL.revokeObjectURL(link.href), 0); showToast("Export ready"); }; document.addEventListener("keydown", (event) => { if (event.key === "Escape") { $("#profilePopover").hidden = true; [$("#detailDialog"), $("#aboutDialog")].forEach((dialog) => { if (dialog.open) dialog.close(); }); } }); }
 
-function activateSearch() {
-  if (state.moved) return;
-  const dock = $("#searchDock");
-  const destination = $("#navSearch");
-  if (!dock || !destination) return;
-  state.moved = true;
-  switchSearch(dock, destination);
-  window.requestAnimationFrame(() => $("#searchInput")?.focus({ preventScroll: true }));
-}
-
-function updateSlideControls() {
-  const total = Math.max(state.slides.length, 1);
-  [$("#slideLabel"), $("#slideLabelBottom")].forEach((label) => { if (label) label.textContent = `${String(state.slide + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`; });
-  [$("#previousSlide"), $("#previousSlideBottom")].forEach((button) => { if (button) button.disabled = state.slide === 0; });
-  [$("#nextSlide"), $("#nextSlideBottom")].forEach((button) => { if (button) button.disabled = state.slide >= state.slides.length - 1; });
-}
-
-function renderSlide() {
-  const current = state.slides[state.slide] || [];
-  $("#catalogGrid").innerHTML = renderCatalog(current, state.slide * PAGE_SIZE);
-  updateSlideControls();
-  document.querySelectorAll(".anime-card").forEach((card) => card.onclick = () => selectAnime(card.dataset.slug));
-  const cards = document.querySelectorAll(".anime-card");
-  if (!state.query && !state.genre) revealNewAnime(cards); else reveal(cards);
-}
-
-function setSlide(next) { state.slide = Math.max(0, Math.min(state.slides.length - 1, next)); renderSlide(); smoothScroll($("#discover")); }
-function escapeHtml(value) { const node = document.createElement("span"); node.textContent = String(value || ""); return node.innerHTML; }
-function downloadTracking() { const blob = new Blob([exportTracking(state.tracking)], { type: "application/json" }); const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = `ilovenime-tracking-${new Date().toISOString().slice(0, 10)}.json`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 0); }
-
-function importTrackingFile(file) {
-  if (!file) return;
-  const loader = $("#dataLoader");
-  const loaderText = $("#dataLoaderText");
-  loader?.classList.remove("hidden");
-  if (loaderText) loaderText.textContent = "Membaca file Local Storage…";
-  const reader = new FileReader();
-  reader.onprogress = (event) => { if (loaderText && event.lengthComputable) loaderText.textContent = `Membaca data… ${Math.round(event.loaded / event.total * 100)}%`; };
-  reader.onload = () => { window.setTimeout(() => { try { if (loaderText) loaderText.textContent = "Menormalisasi daftar anime…"; state.tracking = importTracking(reader.result); state.collectionFilter = "all"; renderTracking(); if (loaderText) loaderText.textContent = `${state.tracking.length} judul berhasil dipulihkan`; window.setTimeout(() => loader?.classList.add("hidden"), 500); } catch (error) { loader?.classList.add("hidden"); window.alert(`Import gagal: ${error.message}`); } }, 280); };
-  reader.onerror = () => { loader?.classList.add("hidden"); window.alert("Import gagal: file tidak dapat dibaca."); };
-  reader.readAsText(file);
-}
-
-function applyCatalog(response, heading, message) { state.slides = response.slides || []; state.slide = 0; $("#resultCount").textContent = response.total || 0; $("#resultsHeading").innerHTML = heading; $("#catalogState").textContent = message; $("#slider").classList.toggle("hidden", !response.total); if (response.total) renderSlide(); }
-
-async function loadDaily() {
-  const token = ++state.searchToken;
-  $("#catalogState").textContent = "Membaca jadwal anime hari ini…";
-  $("#slider").classList.add("hidden");
-  try {
-    const response = await api.daily();
-    if (token !== state.searchToken) return;
-    const label = response.label || "Anime terbaru hari ini";
-    applyCatalog(response, "New <span>anime.</span>", response.total ? `${label} · gunakan tombol panah atas atau bawah untuk melihat semua slide.${response.stale ? " Source lambat; menampilkan data terakhir yang tersedia." : ""}` : `${label} tidak memiliki judul baru pada source.`);
-  } catch (error) {
-    if (token === state.searchToken) { $("#resultCount").textContent = "0"; $("#catalogState").textContent = error.message; }
-  }
-}
-
-async function search() {
-  if (!state.query && !state.genre) { api.cancelCatalog(); return loadDaily(); }
-  const token = ++state.searchToken;
-  $("#catalogState").textContent = "Mencari judul…";
-  $("#slider").classList.add("hidden");
-  try {
-    const response = await api.catalog(state.query, state.genre);
-    if (token !== state.searchToken) return;
-    const aliasNote = response.aliasUsed ? ` Ditemukan melalui alias: ${response.aliasUsed}.` : "";
-    applyCatalog(response, state.query ? `Hasil untuk <span>“${escapeHtml(state.query)}”</span>` : "Hasil berdasarkan <span>genre.</span>", response.total ? `Gunakan tombol panah atas atau bawah; item dengan nama yang sama tetap tersedia jika memiliki slug berbeda.${aliasNote}${response.partial ? " Sebagian halaman belum dimuat karena source lambat." : ""}` : "Tidak ada hasil. Coba kata kunci lain.");
-  } catch (error) {
-    if (token === state.searchToken) { $("#catalogState").textContent = error.message; $("#resultCount").textContent = "0"; }
-  }
-}
-
-function persistCurrent(watchedEpisodes = []) { const current = state.tracking.find((item) => item.slug === state.detail.slug); state.tracking = upsertTracking(state.tracking, { slug: state.detail.slug, title: state.detail.title, image: state.detail.image, total: state.detail.episodes.length, status: state.status, progress: state.progress, watchedEpisodes: watchedEpisodes.length ? watchedEpisodes : (current?.watchedEpisodes || []) }); saveTracking(state.tracking); renderTracking(); }
-function markWatchedAndGetNext(episode) { if (!state.detail || !episode) return null; const number = Number(episode.number); const existing = state.tracking.find((item) => item.slug === state.detail.slug); const watched = Array.from(new Set([...(existing?.watchedEpisodes || []), number])).sort((a, b) => a - b); state.progress = Math.max(state.progress, number); state.tracking = upsertTracking(state.tracking, { slug: state.detail.slug, title: state.detail.title, image: state.detail.image, total: state.detail.episodes.length, status: state.status, progress: state.progress, watchedEpisodes: watched }); const current = state.tracking.find((item) => item.slug === state.detail.slug); state.status = current.status; state.progress = current.progress; saveTracking(state.tracking); renderTracking(); $("#detailBody").innerHTML = renderDetail(state.detail, current); bindDetail(); const index = state.detail.episodes.findIndex((item) => Number(item.number) === number); return state.detail.episodes[index + 1] || null; }
-
-async function selectAnime(slug) {
-  $("#detail").classList.remove("hidden");
-  $("#detailBody").innerHTML = '<p class="empty-state" style="padding:34px">Membaca detail anime…</p>';
-  smoothScroll($("#detail"));
-  try {
-    const response = await api.detail(slug);
-    state.detail = response.data;
-    const current = state.tracking.find((item) => item.slug === slug);
-    state.status = current?.status || "planned";
-    state.progress = current?.progress || 0;
-    $("#detailBody").innerHTML = renderDetail(state.detail, current);
-    if (response.stale) { const notice = document.createElement("p"); notice.className = "empty-state"; notice.style.padding = "12px 34px"; notice.textContent = "Source sedang lambat; detail terakhir yang tersimpan ditampilkan."; $("#detailBody").prepend(notice); }
-    bindDetail();
-    showDetail($("#detail"));
-  } catch (error) { $("#detailBody").innerHTML = `<p class="empty-state" style="padding:34px">${error.message}</p>`; }
-}
-
-function bindDetail() { const list = $("#statusMenu"); $("#statusTrigger").onclick = () => menu(list, !list.classList.contains("is-open")); document.querySelectorAll("[data-status]").forEach((button) => button.onclick = () => { state.status = button.dataset.status; $("#statusLabel").textContent = button.textContent; menu(list, false); }); $("#progressDown").onclick = () => { state.progress = Math.max(0, state.progress - 1); $("#progressValue").textContent = state.progress; }; $("#progressUp").onclick = () => { state.progress = Math.min(state.detail.episodes.length || state.progress + 1, state.progress + 1); $("#progressValue").textContent = state.progress; }; $("#saveTrack").onclick = () => { persistCurrent(); savedFlight($(".detail-poster"), $(".local-badge")); }; document.querySelectorAll("[data-episode]").forEach((button) => button.onclick = () => openPlayer(button.dataset.episode, button.querySelector(".episode-title")?.textContent.trim() || button.textContent.trim(), Number(button.dataset.episodeNumber))); }
-
-function initEnhancements() {
-  const cursor = $("#fireCursor");
-  if (window.desktopApp?.isDesktop) document.documentElement.classList.add("desktop-shell");
-  const pointer = { x: -100, y: -100 };
-  const trail = Array.from({ length: 7 }, (_, index) => { const node = document.createElement("i"); node.className = "cursor-particle"; node.style.setProperty("--trail-index", index); cursor?.appendChild(node); return { node, x: pointer.x, y: pointer.y }; });
-  if (window.desktopApp?.isDesktop && cursor) cursor.classList.add("fire-cursor--desktop");
-  window.addEventListener("pointermove", (event) => { if (cursor && event.pointerType !== "touch") { pointer.x = event.clientX; pointer.y = event.clientY; cursor.style.transform = `translate3d(${pointer.x + 7}px, ${pointer.y + 7}px, 0)`; } }, { passive: true });
-  const animateCursorTrail = () => { trail.forEach((item, index) => { const follow = index === 0 ? pointer : trail[index - 1]; item.x += (follow.x - item.x) * (index === 0 ? .52 : .24); item.y += (follow.y - item.y) * (index === 0 ? .52 : .24); item.node.style.transform = `translate3d(${item.x - pointer.x - 3}px, ${item.y - pointer.y - 3}px, 0) scale(${1 - index * .09})`; }); requestAnimationFrame(animateCursorTrail); };
-  requestAnimationFrame(animateCursorTrail);
-  const toggleAppFullscreen = () => { if (window.desktopApp?.toggleFullscreen) window.desktopApp.toggleFullscreen(); else if (!document.fullscreenElement) document.documentElement.requestFullscreen?.(); else document.exitFullscreen?.(); };
-  $("#toggleAppFullscreen").onclick = toggleAppFullscreen;
-  window.addEventListener("keydown", (event) => { if (event.key === "F11") { event.preventDefault(); toggleAppFullscreen(); } });
-}
-
-async function init() {
-  initEnhancements();
-  initScene();
-  initScrollFade();
-  initPlayer({ onNextEpisode: markWatchedAndGetNext });
-  renderTracking();
-  $("#importData").onclick = () => $("#importDataInput").click();
-  $("#importDataInput").onchange = (event) => { importTrackingFile(event.target.files?.[0]); event.target.value = ""; };
-  $("#exportData").onclick = downloadTracking;
-  $("#closeDetail").onclick = () => $("#detail").classList.add("hidden");
-  $("#clearCollection").onclick = () => $("#clearDialog").showModal();
-  $("#cancelClear").onclick = () => $("#clearDialog").close();
-  $("#confirmClear").onclick = () => { state.tracking = []; state.collectionFilter = "all"; clearTracking(); renderTracking(); $("#clearDialog").close(); };
-  $("#clearDialog").addEventListener("click", (event) => { if (event.target === $("#clearDialog")) $("#clearDialog").close(); });
-  [$("#previousSlide"), $("#previousSlideBottom")].forEach((button) => button.onclick = () => setSlide(state.slide - 1));
-  [$("#nextSlide"), $("#nextSlideBottom")].forEach((button) => button.onclick = () => setSlide(state.slide + 1));
-  $("#searchForm").onsubmit = (event) => { event.preventDefault(); state.query = $("#searchInput").value.trim(); activateSearch(); search(); };
-  $("#searchInput").oninput = (event) => { state.query = event.target.value.trim(); };
-  document.querySelectorAll("[data-scroll]").forEach((link) => link.onclick = (event) => { event.preventDefault(); const target = document.querySelector(link.getAttribute("href")); if (target) smoothScroll(target); });
-  const genresRequest = api.genres().then((genres) => {
-    $("#genreStrip").insertAdjacentHTML("beforeend", renderGenres(genres.data));
-    document.querySelectorAll("[data-genre]").forEach((button) => button.onclick = () => { document.querySelector(".genre-chip.is-active")?.classList.remove("is-active"); button.classList.add("is-active"); state.genre = button.dataset.genre; if (state.query || state.genre) { activateSearch(); search(); } else loadDaily(); });
-  }).catch(() => { /* Catalog state displays source errors when daily/search is loaded. */ });
-  loadDaily();
-  await genresRequest;
-}
-
+async function init() { applyTheme(); applySidebar(); setupProfile(); setupEvents(); initPlayer({ onNextEpisode: markWatchedAndGetNext }); refreshProfile(); renderStorage(); try { const [daily, genres] = await Promise.all([api.daily(), api.genres()]); state.daily = daily.data || []; state.genres = genres.data || []; renderDaily(); renderGenres(); } catch (error) { $("#trendingState").textContent = error.message; $("#updateGrid").innerHTML = `<p class="empty-state">Live catalog unavailable. No dummy titles are shown.</p>`; } }
 init();
