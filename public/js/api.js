@@ -24,7 +24,6 @@ function cachedRequest(key, path, options = {}) {
 export const api = {
   health: () => request("/api/health"),
   daily: () => request("/api/daily"),
-  trending: () => request("/api/trending"),
   genres: () => request("/api/genres"),
   cancelCatalog() { activeCatalogController?.abort(); activeCatalogController = null; },
   catalog(query, genre) {

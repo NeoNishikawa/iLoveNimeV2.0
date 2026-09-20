@@ -1073,6 +1073,10 @@ h1,h2,h3,h4,p{margin:0}
 <style>
 .trending-skeleton{overflow:hidden}.trending-skeleton .thumb{background:linear-gradient(120deg,var(--surface-2),var(--surface),var(--surface-2));background-size:220% 100%;animation:skeletonShimmer 1.4s linear infinite}.skeleton-orb{width:52px;height:52px;border-radius:50%;border:2px solid var(--gold-soft);box-shadow:0 0 22px var(--gold-soft);animation:skeletonOrb 1.2s ease-in-out infinite}.skeleton-line,.skeleton-button{display:block;border-radius:99px;background:linear-gradient(90deg,var(--surface-2),var(--border),var(--surface-2));background-size:220% 100%;animation:skeletonShimmer 1.2s linear infinite}.skeleton-line.title{height:13px;width:82%}.skeleton-line.genre{height:9px;width:55%}.skeleton-line.rate{height:9px;width:34%}.skeleton-button{height:28px;flex:1;border-radius:9px}@keyframes skeletonShimmer{to{background-position:-220% 0}}@keyframes skeletonOrb{0%,100%{transform:scale(.82);opacity:.55}50%{transform:scale(1.12);opacity:1}}
 </style>
+
+<style>
+.compact-filters{display:flex;align-items:center;gap:5px}.compact-filters label{display:flex;align-items:center}.compact-filters label>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.compact-filters select{height:32px;max-width:112px;padding:0 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-size:10px;cursor:pointer}.storage-filters{margin-left:auto}.storage-filters select{max-width:96px}@media(max-width:1100px){.compact-filters select{max-width:84px}.storage-filters{margin-left:0;flex-wrap:wrap}}@media(max-width:760px){.header .compact-filters{display:none}.storage-filters{width:100%}.storage-filters select{flex:1;max-width:none}}
+</style>
 </head>
 <body>
 
@@ -1143,9 +1147,6 @@ h1,h2,h3,h4,p{margin:0}
       <button class="nav-item active" data-nav="dashboard" data-label="Dashboard">
         <svg class="ico"><use href="#i-home"/></svg><span class="nav-label">Dashboard</span>
       </button>
-      <button class="nav-item" data-nav="trending" data-label="Trending">
-        <svg class="ico"><use href="#i-trend"/></svg><span class="nav-label">Trending</span>
-      </button>
       <button class="nav-item" data-nav="update" data-label="New Update">
         <svg class="ico"><use href="#i-refresh"/></svg><span class="nav-label">New Update</span>
       </button>
@@ -1206,6 +1207,11 @@ h1,h2,h3,h4,p{margin:0}
           </div>
           <div class="gf-grid"></div>
         </div>
+      </div>
+      <div class="compact-filters" data-filter-scope="main">
+        <label><span>Type</span><select id="mainTypeFilter"><option value="">Tipe</option><option>Serial TV</option><option>Live Action</option><option>Movie</option><option>OVA</option><option>ONA</option><option>Spesial</option></select></label>
+        <label><span>Status</span><select id="mainStatusFilter"><option value="">Status</option><option value="Segera Tayang">Segera Tayang</option><option value="Sedang Tayang">Sedang Tayang</option><option value="Selesai Tayang">Selesai Tayang</option></select></label>
+        <label><span>Urutan</span><select id="mainSortFilter"><option value="">Standar</option><option value="az">Judul A➞Z</option><option value="za">Judul Z➞A</option><option value="updated">Baru Diupdate</option><option value="added">Baru Ditambah</option><option value="popular">Terpopuler</option><option value="newest">Rilis Terbaru</option><option value="oldest">Rilis Terlawas</option><option value="rating">Rating</option></select></label>
       </div>
 
       <div class="header-right">
@@ -1269,14 +1275,6 @@ h1,h2,h3,h4,p{margin:0}
           <div class="card-grid" id="searchGrid"></div>
         </section>
 
-        <section id="trendingSection">
-          <div class="sec-head">
-            <div class="sec-title"><span class="bar"></span>Anime Trending</div>
-            <div class="sec-sub">Top 3 minggu ini</div>
-          </div>
-          <div class="card-grid trending" id="trendingGrid"></div>
-        </section>
-
         <section id="updateSection">
           <div class="sec-head">
             <div class="sec-title"><span class="bar"></span>New Update</div>
@@ -1314,6 +1312,12 @@ h1,h2,h3,h4,p{margin:0}
               </div>
             </div>
 
+
+            <div class="compact-filters storage-filters" data-filter-scope="storage">
+              <label><span>Tipe</span><select id="storageTypeFilter"><option value="">Tipe</option><option>Serial TV</option><option>Live Action</option><option>Movie</option><option>OVA</option><option>ONA</option><option>Spesial</option></select></label>
+              <label><span>Status</span><select id="storageStatusFilter"><option value="">Status</option><option value="Segera Tayang">Segera Tayang</option><option value="Sedang Tayang">Sedang Tayang</option><option value="Selesai Tayang">Selesai Tayang</option></select></label>
+              <label><span>Urutan</span><select id="storageSortFilter"><option value="">Standar</option><option value="az">Judul A➞Z</option><option value="za">Judul Z➞A</option><option value="added">Baru Ditambah</option><option value="rating">Rating</option></select></label>
+            </div>
             <button class="btn" id="importBtn">
               <svg class="ico"><use href="#i-upload"/></svg> Import
             </button>
