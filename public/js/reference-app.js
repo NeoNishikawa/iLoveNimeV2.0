@@ -24,11 +24,18 @@ let thoughtNode = null;
 let thoughtTimer = null;
 function thoughtStart(kind) {
   thoughtNode?.remove();
+  const inline = kind === "search";
   thoughtNode = document.createElement("div");
-  thoughtNode.className = "thought-overlay";
+  thoughtNode.className = inline ? "thought-inline" : "thought-overlay";
   thoughtNode.innerHTML = `<div class="thought-card" role="status" aria-live="polite"><div class="thought-orb"><i></i><i></i><i></i><b></b></div><div class="thought-copy"><strong data-thought-label>Reading ${kind}</strong><span data-thought-step>Preparing…</span><div class="thought-progress"><i data-thought-progress></i></div><small><span data-thought-percent>0</span>%</small></div></div>`;
-  document.body.appendChild(thoughtNode);
-  thoughtStage(kind === "search" ? "Reading search" : "Reading file", 8);
+  if (inline) {
+    const head = $("#searchSection .sec-head");
+    const actions = $(".sec-actions", head);
+    head?.insertBefore(thoughtNode, actions || null);
+  } else {
+    document.body.appendChild(thoughtNode);
+  }
+  thoughtStage(inline ? "Reading search" : "Reading file", 8);
 }
 function thoughtStage(label, percent) {
   if (!thoughtNode) return;
