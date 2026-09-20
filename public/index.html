@@ -1079,7 +1079,7 @@ h1,h2,h3,h4,p{margin:0}
 </style>
 
 <style>.character-filter .gf-panel{min-width:300px;max-width:420px}.character-filter .gf-grid{max-height:280px;overflow:auto}.character-filter .gf-chip.active{background:var(--gold);color:#111}.character-filter .gf-label{max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style>
-<style>.custom-filters{display:flex;align-items:center;gap:6px}.styled-filter{position:relative}.styled-filter .gf-trigger{min-width:86px}.gf-header .gf-panel{left:0;right:auto}.styled-filter .gf-panel{left:0;right:auto;min-width:220px}.filter-search-btn{height:32px;padding:0 10px;font-size:10px}.custom-filters .gf-grid{max-height:260px;overflow:auto}</style></head>
+<style>.custom-filters{display:flex;align-items:center;gap:6px}.styled-filter{position:relative}.styled-filter .gf-trigger{min-width:86px}.gf-header .gf-panel{left:0;right:auto}.styled-filter .gf-panel{left:0;right:auto;min-width:220px}.filter-search-btn{height:32px;padding:0 10px;font-size:10px}.custom-filters .gf-grid{max-height:260px;overflow:auto}</style><style>.data-menu-wrap{position:relative}.data-menu{position:absolute;z-index:30;right:0;top:calc(100% + 6px);min-width:130px;padding:6px;border:1px solid var(--border);border-radius:10px;background:var(--surface-2);box-shadow:0 16px 36px rgba(0,0,0,.35)}.data-menu button{display:flex;align-items:center;gap:7px;width:100%;padding:9px 10px;border:0;border-radius:7px;background:transparent;color:var(--text);font:inherit;font-size:11px;cursor:pointer;text-align:left}.data-menu button:hover{background:var(--surface-3);color:var(--gold)}</style></head>
 <body>
 
 <svg style="display:none" aria-hidden="true">
@@ -1330,12 +1330,13 @@ h1,h2,h3,h4,p{margin:0}
               <div class="styled-filter" data-filter="storageStatus" data-label="Status"><button class="gf-trigger" type="button"><span class="gf-label">Status</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button><div class="gf-panel" hidden><div class="gf-grid"></div></div></div>
               <button class="btn filter-search-btn" id="storageFilterSearch" type="button"><svg class="ico"><use href="#i-search"/></svg> Search</button>
             </div>
-            <button class="btn" id="importBtn">
-              <svg class="ico"><use href="#i-upload"/></svg> Import
-            </button>
-            <button class="btn" id="exportBtn">
-              <svg class="ico"><use href="#i-download"/></svg> Export
-            </button>
+            <div class="data-menu-wrap">
+              <button class="btn" id="dataMenuBtn" type="button"><svg class="ico"><use href="#i-database"/></svg> Data <svg class="ico"><use href="#i-chev-down"/></svg></button>
+              <div class="data-menu" id="dataMenu" hidden role="menu">
+                <button type="button" id="importBtn" role="menuitem"><svg class="ico"><use href="#i-upload"/></svg> Import</button>
+                <button type="button" id="exportBtn" role="menuitem"><svg class="ico"><use href="#i-download"/></svg> Export</button>
+              </div>
+            </div>
             <button class="btn" id="editModeBtn">
               <svg class="ico"><use href="#i-edit"/></svg> Edit Mode
             </button>
@@ -1472,6 +1473,6 @@ h1,h2,h3,h4,p{margin:0}
 <div id="confirmRoot"></div>
 <div class="toast-stack" id="toastStack"></div>
 
-<script type="module" src="/js/reference-app.js?v=20260921-fix5"></script>
+<script type="module" src="/js/reference-app.js?v=20260921-fix8"></script>
 </body>
 </html>
