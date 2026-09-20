@@ -1077,6 +1077,8 @@ h1,h2,h3,h4,p{margin:0}
 <style>
 .compact-filters{display:flex;align-items:center;gap:5px}.compact-filters label{display:flex;align-items:center}.compact-filters label>span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.compact-filters select{height:32px;max-width:112px;padding:0 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font:inherit;font-size:10px;cursor:pointer}.storage-filters{margin-left:auto}.storage-filters select{max-width:96px}@media(max-width:1100px){.compact-filters select{max-width:84px}.storage-filters{margin-left:0;flex-wrap:wrap}}@media(max-width:760px){.header .compact-filters{display:none}.storage-filters{width:100%}.storage-filters select{flex:1;max-width:none}}
 </style>
+
+<style>.character-filter .gf-panel{min-width:300px;max-width:420px}.character-filter .gf-grid{max-height:280px;overflow:auto}.character-filter .gf-chip.active{background:var(--gold);color:#111}.character-filter .gf-label{max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style>
 </head>
 <body>
 
@@ -1208,6 +1210,11 @@ h1,h2,h3,h4,p{margin:0}
           <div class="gf-grid"></div>
         </div>
       </div>
+
+      <div class="genre-filter character-filter cf-main" data-cf="main">
+        <button class="gf-trigger" type="button"><svg class="ico"><use href="#i-filter"/></svg><span class="gf-label">Karakter</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button>
+        <div class="gf-panel" hidden><div class="gf-head"><span class="gf-title">Filter Karakter — Main Search</span><button class="gf-mini-btn" data-cf-clear>Clear All</button></div><div class="gf-grid"></div></div>
+      </div>
       <div class="compact-filters" data-filter-scope="main">
         <label><span>Type</span><select id="mainTypeFilter"><option value="">Tipe</option><option>Serial TV</option><option>Live Action</option><option>Movie</option><option>OVA</option><option>ONA</option><option>Spesial</option></select></label>
         <label><span>Status</span><select id="mainStatusFilter"><option value="">Status</option><option value="Segera Tayang">Segera Tayang</option><option value="Sedang Tayang">Sedang Tayang</option><option value="Selesai Tayang">Selesai Tayang</option></select></label>
@@ -1313,6 +1320,11 @@ h1,h2,h3,h4,p{margin:0}
             </div>
 
 
+
+            <div class="genre-filter character-filter cf-storage" data-cf="storage">
+              <button class="gf-trigger" type="button"><svg class="ico"><use href="#i-filter"/></svg><span class="gf-label">Karakter</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button>
+              <div class="gf-panel" hidden><div class="gf-head"><span class="gf-title">Filter Karakter — Local Storage</span><button class="gf-mini-btn" data-cf-clear>Clear All</button></div><div class="gf-grid"></div></div>
+            </div>
             <div class="compact-filters storage-filters" data-filter-scope="storage">
               <label><span>Tipe</span><select id="storageTypeFilter"><option value="">Tipe</option><option>Serial TV</option><option>Live Action</option><option>Movie</option><option>OVA</option><option>ONA</option><option>Spesial</option></select></label>
               <label><span>Status</span><select id="storageStatusFilter"><option value="">Status</option><option value="Segera Tayang">Segera Tayang</option><option value="Sedang Tayang">Sedang Tayang</option><option value="Selesai Tayang">Selesai Tayang</option></select></label>
