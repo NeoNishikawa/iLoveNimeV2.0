@@ -1079,7 +1079,7 @@ h1,h2,h3,h4,p{margin:0}
 </style>
 
 <style>.character-filter .gf-panel{min-width:300px;max-width:420px}.character-filter .gf-grid{max-height:280px;overflow:auto}.character-filter .gf-chip.active{background:var(--gold);color:#111}.character-filter .gf-label{max-width:86px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}</style>
-</head>
+<style>.custom-filters{display:flex;align-items:center;gap:6px}.styled-filter{position:relative}.styled-filter .gf-trigger{min-width:86px}.gf-header .gf-panel{left:0;right:auto}.styled-filter .gf-panel{left:0;right:auto;min-width:220px}.filter-search-btn{height:32px;padding:0 10px;font-size:10px}.custom-filters .gf-grid{max-height:260px;overflow:auto}</style></head>
 <body>
 
 <svg style="display:none" aria-hidden="true">
@@ -1215,10 +1215,10 @@ h1,h2,h3,h4,p{margin:0}
         <button class="gf-trigger" type="button"><svg class="ico"><use href="#i-filter"/></svg><span class="gf-label">Karakter</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button>
         <div class="gf-panel" hidden><div class="gf-head"><span class="gf-title">Filter Karakter — Main Search</span><button class="gf-mini-btn" data-cf-clear>Clear All</button></div><div class="gf-grid"></div></div>
       </div>
-      <div class="compact-filters" data-filter-scope="main">
-        <label><span>Type</span><select id="mainTypeFilter"><option value="">Tipe</option><option>Serial TV</option><option>Live Action</option><option>Movie</option><option>OVA</option><option>ONA</option><option>Spesial</option></select></label>
-        <label><span>Status</span><select id="mainStatusFilter"><option value="">Status</option><option value="Segera Tayang">Segera Tayang</option><option value="Sedang Tayang">Sedang Tayang</option><option value="Selesai Tayang">Selesai Tayang</option></select></label>
-        <label><span>Urutan</span><select id="mainSortFilter"><option value="">Standar</option><option value="az">Judul A➞Z</option><option value="za">Judul Z➞A</option><option value="updated">Baru Diupdate</option><option value="added">Baru Ditambah</option><option value="popular">Terpopuler</option><option value="newest">Rilis Terbaru</option><option value="oldest">Rilis Terlawas</option><option value="rating">Rating</option></select></label>
+      <div class="compact-filters custom-filters" data-filter-scope="main">
+        <div class="styled-filter" data-filter="mainType" data-label="Tipe"><button class="gf-trigger" type="button"><span class="gf-label">Tipe</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button><div class="gf-panel" hidden><div class="gf-grid"></div></div></div>
+        <div class="styled-filter" data-filter="mainStatus" data-label="Status"><button class="gf-trigger" type="button"><span class="gf-label">Status</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button><div class="gf-panel" hidden><div class="gf-grid"></div></div></div>
+        <button class="btn filter-search-btn" id="mainFilterSearch" type="button"><svg class="ico"><use href="#i-search"/></svg> Search</button>
       </div>
 
       <div class="header-right">
@@ -1325,10 +1325,10 @@ h1,h2,h3,h4,p{margin:0}
               <button class="gf-trigger" type="button"><svg class="ico"><use href="#i-filter"/></svg><span class="gf-label">Karakter</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button>
               <div class="gf-panel" hidden><div class="gf-head"><span class="gf-title">Filter Karakter — Local Storage</span><button class="gf-mini-btn" data-cf-clear>Clear All</button></div><div class="gf-grid"></div></div>
             </div>
-            <div class="compact-filters storage-filters" data-filter-scope="storage">
-              <label><span>Tipe</span><select id="storageTypeFilter"><option value="">Tipe</option><option>Serial TV</option><option>Live Action</option><option>Movie</option><option>OVA</option><option>ONA</option><option>Spesial</option></select></label>
-              <label><span>Status</span><select id="storageStatusFilter"><option value="">Status</option><option value="Segera Tayang">Segera Tayang</option><option value="Sedang Tayang">Sedang Tayang</option><option value="Selesai Tayang">Selesai Tayang</option></select></label>
-              <label><span>Urutan</span><select id="storageSortFilter"><option value="">Standar</option><option value="az">Judul A➞Z</option><option value="za">Judul Z➞A</option><option value="added">Baru Ditambah</option><option value="rating">Rating</option></select></label>
+            <div class="compact-filters storage-filters custom-filters" data-filter-scope="storage">
+              <div class="styled-filter" data-filter="storageType" data-label="Tipe"><button class="gf-trigger" type="button"><span class="gf-label">Tipe</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button><div class="gf-panel" hidden><div class="gf-grid"></div></div></div>
+              <div class="styled-filter" data-filter="storageStatus" data-label="Status"><button class="gf-trigger" type="button"><span class="gf-label">Status</span><svg class="ico gf-chev"><use href="#i-chev-down"/></svg></button><div class="gf-panel" hidden><div class="gf-grid"></div></div></div>
+              <button class="btn filter-search-btn" id="storageFilterSearch" type="button"><svg class="ico"><use href="#i-search"/></svg> Search</button>
             </div>
             <button class="btn" id="importBtn">
               <svg class="ico"><use href="#i-upload"/></svg> Import
@@ -1472,6 +1472,6 @@ h1,h2,h3,h4,p{margin:0}
 <div id="confirmRoot"></div>
 <div class="toast-stack" id="toastStack"></div>
 
-<script type="module" src="/js/reference-app.js?v=20260921-fix3"></script>
+<script type="module" src="/js/reference-app.js?v=20260921-fix4"></script>
 </body>
 </html>
