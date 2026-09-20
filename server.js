@@ -590,6 +590,32 @@ app.get("/api/catalog", catalogRateLimit, async (request, response) => {
   }
 });
 
+const ANILIST_URL = "https://graphql.anilist.co";
+async function anilistTrendingMetadata(items) {
+  const titles = items.slice(0, 20);
+  const lookup = async (item) => {
+    const queryTitle = JSON.stringify(String(item.title || item.name || "").replace(/\s+Sub Indo.*$/i, "").replace(/\s*\[[^\]]+\]/g, "").trim());
+    try {
+      const response = await axios.post(ANILIST_URL, { query: `query { Media(search: ${queryTitle}, type: ANIME) { id title { romaji english native userPreferred } averageScore episodes genres description(asHtml: false) coverImage { extraLarge large } } }` }, { timeout: Math.min(REQUEST_TIMEOUT_MS, 12000), headers: { "Content-Type": "application/json", Accept: "application/json" } });
+      const media = response.data?.data?.Media;
+      if (!media) return { ...item, anilistMatched: false };
+      const title = media.title?.userPreferred || media.title?.english || media.title?.romaji || item.title;
+      return { ...item, title, rating: Number(media.averageScore || 0) / 10, totalEpisodes: Number(media.episodes || item.totalEpisodes || 0), total: Number(media.episodes || item.total || 0), genres: media.genres || item.genres || [], synopsis: media.description || item.synopsis || "", posterUrl: media.coverImage?.extraLarge || media.coverImage?.large || item.posterUrl || item.image || "", image: media.coverImage?.extraLarge || media.coverImage?.large || item.image || "", anilistId: media.id, anilistMatched: true };
+    } catch (_) { return { ...item, anilistMatched: false }; }
+  };
+  return (await Promise.all(titles.map(lookup))).sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0) || a.title.localeCompare(b.title));
+}
+app.get("/api/trending", async (_, response) => {
+  try {
+    const dailyKey = `daily:${todayKey()}`;
+    const daily = await cached(dailyKey, dailyWithSources, DAILY_CACHE_MS, true);
+    const data = await cached("anilist:trending:" + todayKey(), () => anilistTrendingMetadata(daily?.data || []), 15 * 60 * 1000, true);
+    response.json({ data: data || [], total: data?.length || 0, provider: "anilist", metadataOnly: true, stale: isStale("anilist:trending:" + todayKey()) });
+  } catch (error) {
+    response.status(503).json({ data: [], total: 0, provider: "anilist", error: `AniList Trending tidak tersedia: ${error.message}` });
+  }
+});
+
 app.get("/api/daily", async (_, response) => {
   try {
     const key = `daily:${todayKey()}`;
